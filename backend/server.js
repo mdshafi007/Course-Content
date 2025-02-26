@@ -1,4 +1,3 @@
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -28,7 +27,8 @@ const unitSchema = new mongoose.Schema({
 const moduleSchema = new mongoose.Schema({
     number: { type: Number, required: true },
     units: [unitSchema],
-    duration: { type: Number, required: true, min: 1 }
+    duration: { type: Number, required: true, min: 1 },
+    practices: [{ type: String }]
 });
 
 // Course Schema
@@ -58,6 +58,10 @@ const courseSchema = new mongoose.Schema({
         type: [String],
         required: true,
         validate: [array => array.length > 0, 'At least one reference book is required']
+    },
+    skills: {
+        type: [String],
+        default: []
     },
     credits: { type: Number, required: true },
     modules: [moduleSchema]

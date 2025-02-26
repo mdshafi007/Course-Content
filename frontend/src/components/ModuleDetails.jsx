@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
-import { Search } from 'lucide-react';
+import { Search, Plus, X } from 'lucide-react';
 import jsPDF from 'jspdf';
 
 function ModuleDetails() {
@@ -18,6 +17,7 @@ function ModuleDetails() {
         { name: '', selectedTextbook: '', pageFrom: 1, pageTo: 1, contents: '' },
         { name: '', selectedTextbook: '', pageFrom: 1, pageTo: 1, contents: '' }
       ],
+      practices: [''],
       duration: 0
     },
     {
@@ -27,6 +27,7 @@ function ModuleDetails() {
         { name: '', selectedTextbook: '', pageFrom: 1, pageTo: 1, contents: '' },
         { name: '', selectedTextbook: '', pageFrom: 1, pageTo: 1, contents: '' }
       ],
+      practices: [''],
       duration: 0
     }
   ]);
@@ -47,7 +48,12 @@ function ModuleDetails() {
         
         // If modules exist in the response, use them
         if (response.data.course.modules && response.data.course.modules.length > 0) {
-          setModules(response.data.course.modules);
+          // Ensure each module has a practices array
+          const updatedModules = response.data.course.modules.map(module => ({
+            ...module,
+            practices: module.practices || ['']
+          }));
+          setModules(updatedModules);
         }
         
         toast.success('Course details loaded successfully');
@@ -82,6 +88,28 @@ function ModuleDetails() {
     const newModules = [...modules];
     newModules[moduleIndex].duration = value;
     setModules(newModules);
+  };
+
+  const handlePracticeChange = (moduleIndex, practiceIndex, value) => {
+    const newModules = [...modules];
+    newModules[moduleIndex].practices[practiceIndex] = value;
+    setModules(newModules);
+  };
+
+  const addNewPractice = (moduleIndex) => {
+    const newModules = [...modules];
+    newModules[moduleIndex].practices.push('');
+    setModules(newModules);
+  };
+
+  const removePractice = (moduleIndex, practiceIndex) => {
+    const newModules = [...modules];
+    if (newModules[moduleIndex].practices.length > 1) {
+      newModules[moduleIndex].practices = newModules[moduleIndex].practices.filter(
+        (_, index) => index !== practiceIndex
+      );
+      setModules(newModules);
+    }
   };
 
   const handleSave = async () => {
@@ -258,16 +286,18 @@ function ModuleDetails() {
         });
   
         // Practices section if exists
-        if (module.practices && module.practices.length > 0) {
+        if (module.practices && module.practices.length > 0 && module.practices[0] !== '') {
           doc.setFont("helvetica", "bold");
           doc.text("PRACTICES:", leftMargin, currentY);
           currentY += 8;
           
           doc.setFont("helvetica", "normal");
           module.practices.forEach(practice => {
-            const practiceLines = doc.splitTextToSize(`• ${practice}`, pageWidth - 25);
-            doc.text(practiceLines, leftMargin, currentY);
-            currentY += (practiceLines.length * 5) + 4;
+            if (practice.trim() !== '') {
+              const practiceLines = doc.splitTextToSize(`• ${practice}`, pageWidth - 25);
+              doc.text(practiceLines, leftMargin, currentY);
+              currentY += (practiceLines.length * 5) + 4;
+            }
           });
           
           currentY += 8;
@@ -400,6 +430,28 @@ function ModuleDetails() {
           currentY += (bookLines.length * 5) + 4;
         });
       }
+      
+      // Skills section
+      if (courseData.skills && courseData.skills.length > 0 && courseData.skills.some(skill => skill.trim() !== '')) {
+        if (currentY > 230) {
+          doc.addPage();
+          currentY = 20;
+        }
+        
+        currentY += 4;
+        doc.setFont("helvetica", "bold");
+        doc.text("SKILLS:", leftMargin, currentY);
+        currentY += 8;
+        
+        doc.setFont("helvetica", "normal");
+        courseData.skills.forEach((skill, index) => {
+          if (skill.trim() !== '') {
+            const skillLines = doc.splitTextToSize(`• ${skill}`, pageWidth - 25);
+            doc.text(skillLines, leftMargin, currentY);
+            currentY += (skillLines.length * 5) + 4;
+          }
+        });
+      }
   
       doc.save(`${courseData.courseId}_syllabus.pdf`);
       toast.success('PDF generated successfully');
@@ -518,8 +570,45 @@ function ModuleDetails() {
                 </div>
               </div>
             ))}
+            
+            {/* Practices Section */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-lg font-medium mb-3">Practices</h3>
+              <div className="space-y-3">
+                {module.practices.map((practice, practiceIndex) => (
+                  <div key={practiceIndex} className="flex items-center">
+                    <span className="mr-2 text-gray-600">•</span>
+                    <input
+                      type="text"
+                      value={practice}
+                      onChange={(e) => handlePracticeChange(moduleIndex, practiceIndex, e.target.value)}
+                      placeholder={`Practice ${practiceIndex + 1}`}
+                      className="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    />
+                    {module.practices.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removePractice(moduleIndex, practiceIndex)}
+                        className="ml-2 text-gray-400 hover:text-red-500"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => addNewPractice(moduleIndex)}
+                  className="mt-3 inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Practice
+                </button>
+              </div>
+            </div>
+            
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700">Module Duration (weeks)</label>
+              <label className="block text-sm font-medium text-gray-700">Module Duration (hours)</label>
               <input 
                 type="number" 
                 min="1" 
@@ -533,29 +622,29 @@ function ModuleDetails() {
         ))}
         
         <div className="flex justify-center space-x-4 mt-8">
-  <button
-    onClick={handleSave}
-    disabled={!courseData}
-    className={`inline-flex justify-center py-2 px-4 text-white rounded-md ${courseData ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-400 cursor-not-allowed'}`}
-  >
-    Save
-  </button>
-  <button
-    onClick={handlePreview}
-    disabled={!courseData}
-    className={`inline-flex justify-center py-2 px-4 rounded-md ${courseData ? 'text-gray-700 bg-white hover:bg-gray-50' : 'text-gray-400 bg-gray-100 cursor-not-allowed'}`}
-  >
-    Preview
-  </button>
-  <button
-    onClick={generatePDF}
-    disabled={!courseData}
-    className={`inline-flex justify-center py-2 px-4 text-white rounded-md ${courseData ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
-  >
-    Generate PDF
-  </button>
-</div>
-</div>
+          <button
+            onClick={handleSave}
+            disabled={!courseData}
+            className={`inline-flex justify-center py-2 px-4 text-white rounded-md ${courseData ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-400 cursor-not-allowed'}`}
+          >
+            Save
+          </button>
+          <button
+            onClick={handlePreview}
+            disabled={!courseData}
+            className={`inline-flex justify-center py-2 px-4 rounded-md ${courseData ? 'text-gray-700 bg-white hover:bg-gray-50' : 'text-gray-400 bg-gray-100 cursor-not-allowed'}`}
+          >
+            Preview
+          </button>
+          <button
+            onClick={generatePDF}
+            disabled={!courseData}
+            className={`inline-flex justify-center py-2 px-4 text-white rounded-md ${courseData ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
+          >
+            Generate PDF
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

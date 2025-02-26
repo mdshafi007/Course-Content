@@ -1,96 +1,3 @@
-// import React, { useState, useEffect } from 'react';
-// import { useParams } from 'react-router-dom';
-// import axios from 'axios';
-
-// function CourseCoursePreview() {
-//   const { courseId } = useParams();
-//   const [courseData, setCourseData] = useState(null);
-//   const [hoveredUnit, setHoveredUnit] = useState(null);
-
-//   useEffect(() => {
-//     const fetchCourseData = async () => {
-//       try {
-//         const response = await axios.get(`http://localhost:5000/api/courses/${courseId}`);
-//         if (response.data.success) {
-//           setCourseData(response.data.course);
-//         }
-//       } catch (error) {
-//         console.error('Error fetching course:', error);
-//       }
-//     };
-
-//     fetchCourseData();
-//   }, [courseId]);
-
-//   if (!courseData) {
-//     return <div className="flex justify-center items-center h-screen">Loading...</div>;
-//   }
-
-//   return (
-//     <div className="max-w-4xl mx-auto p-6">
-//       <div className="bg-white rounded-lg shadow-xl p-8">
-//         <h1 className="text-3xl font-bold text-gray-900 mb-8">Course CoursePreview</h1>
-
-//         <section className="mb-8">
-//           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Basic Information</h2>
-//           <div className="grid grid-cols-2 gap-4">
-//             <div>
-//               <p className="text-sm font-medium text-gray-500">Course ID</p>
-//               <p className="mt-1">{courseData.courseId}</p>
-//             </div>
-//             <div>
-//               <p className="text-sm font-medium text-gray-500">Course Name</p>
-//               <p className="mt-1">{courseData.courseName}</p>
-//             </div>
-//             <div>
-//               <p className="text-sm font-medium text-gray-500">Year</p>
-//               <p className="mt-1">{courseData.year}</p>
-//             </div>
-//             <div>
-//               <p className="text-sm font-medium text-gray-500">Semester</p>
-//               <p className="mt-1">{courseData.semester}</p>
-//             </div>
-//           </div>
-//         </section>
-
-//         <section className="mb-8">
-//           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Modules</h2>
-//           {courseData.modules?.map((module, moduleIndex) => (
-//             <div key={moduleIndex} className="mb-6">
-//               <h3 className="text-xl font-medium text-gray-800 mb-3">
-//                 Module {module.number} (Duration: {module.duration} weeks)
-//               </h3>
-//               <div className="space-y-4">
-//                 {module.units.map((unit, unitIndex) => (
-//                   <div
-//                     key={unitIndex}
-//                     className="p-4 bg-gray-50 rounded-lg"
-//                     onMouseEnter={() => setHoveredUnit(`${moduleIndex}-${unitIndex}`)}
-//                     onMouseLeave={() => setHoveredUnit(null)}
-//                   >
-//                     <div className="relative">
-//                       <h4 className="text-lg font-medium text-gray-700">
-//                         Unit {unitIndex + 1}: {unit.name}
-//                       </h4>
-//                       {hoveredUnit === `${moduleIndex}-${unitIndex}` && (
-//                         <div className="absolute top-0 -translate-y-full left-0 bg-black text-white p-2 rounded text-sm">
-//                           Pages {unit.pageFrom}-{unit.pageTo} from "{unit.selectedTextbook}"
-//                         </div>
-//                       )}
-//                     </div>
-//                     <p className="mt-2">{unit.contents}</p>
-//                   </div>
-//                 ))}
-//               </div>
-//             </div>
-//           ))}
-//         </section>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default CourseCoursePreview;
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -213,6 +120,22 @@ function CoursePreview() {
           </div>
         </div>
 
+        {/* Skills Section */}
+        {courseData.skills && courseData.skills.length > 0 && courseData.skills.some(skill => skill.trim() !== '') && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-2">Skills</h2>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <ul className="list-disc pl-4 space-y-1">
+                {courseData.skills.map((skill, index) => (
+                  skill.trim() !== '' && (
+                    <li key={index} className="text-sm">{skill}</li>
+                  )
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
         {courseData.modules && courseData.modules.length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Modules</h2>
@@ -220,7 +143,7 @@ function CoursePreview() {
               <div key={moduleIndex} className="mb-6">
                 <h3 className="text-lg font-medium mb-2">Module {module.number} 
                   <span className="text-sm font-normal text-gray-600 ml-2">
-                    ({module.duration} weeks)
+                    ({module.duration} hours)
                   </span>
                 </h3>
                 <div className="space-y-3">
@@ -233,6 +156,20 @@ function CoursePreview() {
                       <p className="text-sm">{unit.contents}</p>
                     </div>
                   ))}
+                  
+                  {/* Display Practices */}
+                  {module.practices && module.practices.length > 0 && module.practices.some(p => p.trim() !== '') && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Practices:</h4>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {module.practices.map((practice, practiceIndex) => (
+                          practice.trim() !== '' && (
+                            <li key={practiceIndex} className="text-sm">{practice}</li>
+                          )
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

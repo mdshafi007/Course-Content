@@ -21,7 +21,8 @@ function CourseForm() {
     prerequisites: '',
     courseOutcomes: [{ outcome: '', bloomLevel: '' }],
     textbooks: [''],
-    referenceBooks: ['']
+    referenceBooks: [''],
+    skills: ['']
   });
 
   const calculateCredits = () => {
@@ -108,6 +109,31 @@ function CourseForm() {
       setCourseData(prev => ({
         ...prev,
         referenceBooks: prev.referenceBooks.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  const handleSkillChange = (index, value) => {
+    const newSkills = [...courseData.skills];
+    newSkills[index] = value;
+    setCourseData(prev => ({
+      ...prev,
+      skills: newSkills
+    }));
+  };
+
+  const addNewSkill = () => {
+    setCourseData(prev => ({
+      ...prev,
+      skills: [...prev.skills, '']
+    }));
+  };
+
+  const removeSkill = (index) => {
+    if (courseData.skills.length > 1) {
+      setCourseData(prev => ({
+        ...prev,
+        skills: prev.skills.filter((_, i) => i !== index)
       }));
     }
   };
@@ -448,6 +474,41 @@ function CourseForm() {
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Reference Book
+              </button>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Skills</label>
+              {courseData.skills.map((skill, index) => (
+                <div key={index} className="flex mb-2">
+                  <div className="flex-grow flex items-center">
+                    <span className="mr-2 text-gray-600">•</span>
+                    <input
+                      type="text"
+                      value={skill}
+                      onChange={(e) => handleSkillChange(index, e.target.value)}
+                      className="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      placeholder={`Skill ${index + 1}`}
+                    />
+                  </div>
+                  {courseData.skills.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeSkill(index)}
+                      className="ml-2 text-gray-400 hover:text-red-500"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addNewSkill}
+                className="mt-2 inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Skill
               </button>
             </div>
           </div>
