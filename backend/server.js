@@ -71,6 +71,17 @@ const Course = mongoose.model('Course', courseSchema);
 
 // Routes
 
+// Get all courses
+app.get('/api/courses', async (req, res) => {
+    try {
+        const courses = await Course.find({}, 'courseId courseName year semester courseCategory');
+        res.json({ success: true, courses });
+    } catch (error) {
+        console.error('Error fetching courses:', error);
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+});
+
 // Create a new course
 app.post('/api/courses', async (req, res) => {
     try {
